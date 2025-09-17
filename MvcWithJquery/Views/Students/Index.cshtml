@@ -1,0 +1,159 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Student Info</h2>
+<div>
+    <input type="hidden" id="StudentID" />
+    <div class="form-group">
+        <label for="StudentName">Student Name</label>
+        <input type="text" id="StudentName" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="Address">Address</label>
+        <input type="text" id="Address" class="form-control" />
+    </div>
+    <div class="form-group">
+        <button class="btn btn-success" id="btnAdd" onclick="addStudent()"><i class="glyphicon glyphicon-save"></i> Add</button>
+        <button class="btn btn-primary" id="btnUpdate" onclick="updateStudent()"><i class="glyphicon glyphicon-pencil"></i> Update</button>
+        <button class="btn btn-default" id="btnReset" onclick="reset()"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+
+    </div>
+</div>
+
+<hr />
+<table id="tblStudent" border="1" style="width:100%"></table>
+
+<script type="text/javascript"> 
+
+    function reset() {
+        $('#StudentID').val('');
+        $('#StudentName').val('');
+        $('#Address').val('');
+
+        $('#btnAdd').show();
+        $('#btUpdate').hide();
+
+        getStudents();
+    }
+
+    function addStudent() {
+        var StudentName = $('#StudentName').val();
+        var Address = $('#Address').val();
+
+        var ajaxReq = {};
+        ajaxReq.url = "/Students/Save";
+        ajaxReq.type = "POST";
+        ajaxReq.data = JSON.stringify({ StudentName: StudentName, Address: Address });
+        ajaxReq.datatype = "json";
+        ajaxReq.contentType = "application/json";
+        ajaxReq.success = function (res) {
+            if (res.StudentID > 0) {
+                reset();
+                console.log('Student saved.');
+                $('#btnAdd').show();
+                $('#btUpdate').hide();
+            } else {
+                console.log('Student not saved.');
+            }
+        };
+        ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+        $.ajax(ajaxReq);
+    }
+
+    function updateStudent() {
+        var StudentID = parseInt($('#StudentID').val());
+        var StudentName = $('#StudentName').val();
+        var Address = $('#Address').val();
+
+        var ajaxReq = {};
+        ajaxReq.url = "/Students/Update";
+        ajaxReq.type = "POST";
+        ajaxReq.data = JSON.stringify({ StudentID: StudentID, StudentName: StudentName, Address: Address });
+        ajaxReq.datatype = "json";
+        ajaxReq.contentType = "application/json";
+        ajaxReq.success = function (res) {
+            console.log('Student updated.');
+            $('#btnAdd').show();
+            $('#btUpdate').hide();
+            reset();
+        };
+        ajaxReq.error = function () { console.log(ajaxReq); };
+        $.ajax(ajaxReq);
+    }
+
+    function getStudents() {
+        $('#tblStudent').empty();
+        var ajaxReq = {};
+        ajaxReq.url = "/Students/GetAll";
+        ajaxReq.type = "GET";
+        ajaxReq.datatype = "json";
+        ajaxReq.contentType = "application/json";
+        ajaxReq.success = function (res) {
+            $('#tblStudent').append(
+                '<tr>'
+                + '<th>StudentID</th>'
+                + '<th>StudentName</th>'
+                + '<th>Address</th>'
+                + '<th>Options</th>'
+                + '</tr>'
+            );
+
+            for (var i = 0; i < res.length; i++) {
+                var sl = i + 1;
+                $("#tblStudent").append(
+                    '<tr>'
+                    + '<td>' + res[i].StudentID+'</td>'
+                    + '<td>' + res[i].StudentName +'</td>'
+                    + '<td>' + res[i].Address +'</td>'
+                    + '<td>'
+                    + '<button class="btn btn-default" onclick= "getStudentById(' + res[i].StudentID + ')" ><i class="glyphicon glyphicon-pencil"></i> Edit</button > '
+                    + '<button class="btn btn-danger" onclick= "removeStudentById(' + res[i].StudentID + ')" ><i class="glyphicon glyphicon-trash"></i> Remove</button > '
+                    + '</td>'
+                    + '</tr>'
+                );
+            }
+        };
+        ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+        $.ajax(ajaxReq);
+    }
+
+    function getStudentById(studentId) {
+        var ajaxReq = {};
+        ajaxReq.url = "/Students/GetById?id=" + studentId;
+        ajaxReq.type = "GET";
+        ajaxReq.datatype = "json";
+        ajaxReq.contentType = "application/json";
+        ajaxReq.success = function (res) {
+            $('#StudentID').val(res.StudentID);
+            $('#StudentName').val(res.StudentName);
+            $('#Address').val(res.Address);
+
+            $('#btnAdd').hide();
+            $('#btUpdate').show();
+        };
+        ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+        $.ajax(ajaxReq);
+    }
+
+    function removeStudentById(studentId) {
+        if (confirm('Are you sure to delete?')) {
+            var ajaxReq = {};
+            ajaxReq.url = "/Students/Remove";
+            ajaxReq.data = JSON.stringify({ id: studentId });
+            ajaxReq.type = "POST";
+            ajaxReq.datatype = "json";
+            ajaxReq.contentType = "application/json";
+            ajaxReq.success = function (res) {
+                console.log(res);
+                reset();
+            };
+            ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+            $.ajax(ajaxReq);
+        }
+    }
+
+</script>
+
